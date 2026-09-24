@@ -4,6 +4,7 @@ package cli
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -35,6 +36,10 @@ type globalFlags struct {
 	logLevel string
 	quiet    bool
 	dryRun   bool
+
+	// logger writes diagnostics to stderr. PersistentPreRunE builds it once the
+	// level is resolved; read it through g.log(), never directly.
+	logger *slog.Logger
 }
 
 // Execute builds and runs the root command, returning the process exit code.
@@ -82,6 +87,11 @@ func newRootCmdWith(g *globalFlags) *cobra.Command {
 			if g.quiet {
 				g.logLevel = "error"
 			}
+			lvl, err := parseLevel(g.logLevel)
+			if err != nil {
+				return err
+			}
+			g.logger = newLogger(cmd.ErrOrStderr(), lvl)
 			return nil
 		},
 	}

@@ -20,6 +20,9 @@ mycli hello Kit                # Hello, Kit!
 mycli hello Kit --json         # {"ok":true,"command":"hello",...}
 mycli version
 mycli --help
+
+mycli hello Kit --log-level debug   # diagnostics on stderr; stdout stays clean
+mycli hello Kit --quiet             # errors only
 ```
 
 ## Exit codes

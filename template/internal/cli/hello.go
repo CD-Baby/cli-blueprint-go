@@ -46,6 +46,8 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 					map[string]int{"length": len(name), "limit": maxNameLen})
 			}
 
+			g.log().Debug("resolved name", "name", name, "from_env", len(args) == 0)
+
 			greeting := "Hello, " + name + "!"
 			var warnings []string
 			if shout {
@@ -53,6 +55,7 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 				warnings = append(warnings, "shout mode upper-cased the greeting")
 			}
 			if g.dryRun {
+				g.log().Warn("dry run: skipping writes")
 				warnings = append(warnings, "dry run: nothing was written")
 			}
 

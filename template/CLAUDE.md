@@ -22,6 +22,7 @@ A single Go binary. Describe the one job it performs.
 - Go 1.26
 - `spf13/cobra` for the command tree, `spf13/pflag` for flags
 - `spf13/viper` for environment binding
+- `log/slog` for stderr diagnostics
 - `rogpeppe/go-internal/testscript` for end-to-end command tests
 
 ## Repository Layout
@@ -53,6 +54,17 @@ focused. A file that grows past a few hundred lines is doing too much.
 - `warnings` always serializes as an array, never as `null`.
 - Error `code` values are a public contract. Callers branch on them. Do not
   change what an existing code means.
+
+## Logging
+
+- Logs go to stderr through `g.log()`. Never to stdout, under any flag.
+- `--log-level` takes `debug`, `info`, `warn` or `error`. The default is
+  `info`. `--quiet` raises the floor to `error`. `$MYCLI_LOG` supplies the
+  level when the flag is absent.
+- An unknown level is a usage error (exit 2), not a silent fallback. A typo
+  must not quietly discard the logs the caller asked for.
+- Use `debug` for anything a caller did not ask to see. A command at the
+  default level prints its result and nothing more.
 
 ## Exit Codes (stable contract — verbatim in root `--help`)
 
@@ -110,4 +122,4 @@ from a file at runtime.
 - Document every exported symbol. Say why, not what.
 - Wrap errors with context: `fmt.Errorf("read %s: %w", path, err)`.
 - No `panic` outside `main`. No `os.Exit` outside `main`.
-- Do not log to stdout. Ever.
+- Do not log to stdout. Ever. Use `g.log()`, which writes to stderr.

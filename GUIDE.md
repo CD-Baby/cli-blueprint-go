@@ -44,6 +44,19 @@ RunE: run(g, "thing", func(cmd *cobra.Command, args []string) (*cmdResult, error
 }),
 ```
 
+## 3a. Logging is stderr, and it is real
+
+`--log-level` and `--quiet` are wired to a `log/slog` handler on stderr. Read
+the logger through `g.log()`, which falls back to a discard logger so a handler
+never needs a nil check.
+
+An unknown level is a usage error, not a fallback to `info`. If someone types
+`--log-level debgu`, the right answer is to say so, not to run the command
+with the logs they asked for silently dropped.
+
+Log at `debug` for anything the caller did not ask to see. A command run at the
+default level should print its result and nothing else.
+
 ## 4. Failures are typed
 
 `errors.go` holds one constructor per exit code. A handler returns one of

@@ -37,6 +37,7 @@ Options:
 | `internal/cli/root.go` | command tree, persistent flags, exit code table |
 | `internal/cli/run.go` | one output contract shared by every command |
 | `internal/cli/errors.go` | typed errors, one constructor per exit code |
+| `internal/cli/logging.go` | `log/slog` on stderr, driven by `--log-level` |
 | `internal/cli/version.go` | build metadata injected by `-ldflags` |
 | `internal/cli/hello.go` | worked example; copy it, then delete it |
 | `internal/result/` | the `--json` output envelope |

@@ -1,0 +1,42 @@
+# Logs go to stderr at the requested level. stdout stays clean.
+
+# The default level hides debug records.
+exec mycli hello Kit
+stdout 'Hello, Kit!'
+! stderr 'resolved name'
+
+# --log-level debug shows them, on stderr only.
+exec mycli hello Kit --log-level debug
+stdout 'Hello, Kit!'
+! stdout 'resolved name'
+stderr 'level=DEBUG'
+stderr 'resolved name'
+
+# --dry-run warns at the default level.
+exec mycli hello Kit --dry-run
+stderr 'level=WARN'
+stderr 'dry run'
+
+# --quiet raises the floor to error and silences that warning.
+exec mycli hello Kit --dry-run --quiet
+stdout 'Hello, Kit!'
+! stderr 'dry run'
+
+# MYCLI_LOG supplies the level when the flag is absent.
+env MYCLI_LOG=debug
+exec mycli hello Kit
+stderr 'resolved name'
+
+# An explicit flag still beats the environment.
+exec mycli hello Kit --log-level error
+! stderr 'resolved name'
+env MYCLI_LOG=
+
+# An unknown level is a usage error, not a silent fallback.
+! exec mycli hello Kit --log-level loud
+stderr 'unknown --log-level'
+
+# A bad level in the environment is rejected the same way.
+env MYCLI_LOG=loud
+! exec mycli hello Kit
+stderr 'unknown --log-level'
