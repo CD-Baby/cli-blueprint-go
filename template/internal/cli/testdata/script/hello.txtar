@@ -1,0 +1,46 @@
+# The worked example: plain output, JSON envelope, and the failure contract.
+
+exec mycli hello Kit
+stdout 'Hello, Kit!'
+! stderr .
+
+# Under --json, stdout carries exactly one envelope and nothing else.
+exec mycli hello Kit --json
+stdout '"ok":true'
+stdout '"command":"hello"'
+stdout '"greeting":"Hello, Kit!"'
+stdout '"warnings":\[\]'
+
+# --shout upper-cases and records a non-fatal warning.
+exec mycli hello Kit --shout --json
+stdout 'HELLO, KIT!'
+stdout 'shout mode'
+
+# The name falls back to the environment.
+env MYCLI_NAME=Ada
+exec mycli hello
+stdout 'Hello, Ada!'
+
+# An explicit argument beats the environment.
+exec mycli hello Kit
+stdout 'Hello, Kit!'
+
+# No name anywhere is a missing prerequisite.
+env MYCLI_NAME=
+! exec mycli hello --json
+stdout '"ok":false'
+stdout '"code":"MISSING_PREREQUISITE"'
+
+# Without --json a failure prints nothing on stdout; the diagnostic goes to stderr.
+! exec mycli hello
+! stdout .
+stderr 'no name given'
+
+# Too long is a validation failure carrying structured detail.
+! exec mycli hello aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --json
+stdout '"code":"VALIDATION_FAILED"'
+stdout '"limit":64'
+
+# An unknown flag is a usage error.
+! exec mycli hello Kit --bogus
+stderr 'unknown flag'

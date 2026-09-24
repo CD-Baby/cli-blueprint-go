@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  template:
+    name: template stays green
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: template
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: vet
+        run: go vet ./...
+      - name: lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.11.4
+          working-directory: template
+      - name: test (race)
+        run: go test -race ./...
+      - name: coverage gate
+        run: make cover
+      - name: cross-compile
+        run: make cross
+
+  scaffold:
+    name: init.sh produces a working project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: scaffold and verify
+        run: ./init_test.sh

@@ -1,0 +1,22 @@
+# version reports build metadata in both output modes.
+
+exec mycli version
+stdout 'mycli dev'
+stdout 'commit:'
+stdout 'build date:'
+stdout 'go:'
+
+exec mycli version --json
+stdout '"ok":true'
+stdout '"command":"version"'
+stdout '"version":"dev"'
+stdout '"build_date":"unknown"'
+
+# The root help states the exit code contract verbatim.
+exec mycli --help
+stdout 'EXIT CODES'
+stdout '3  validation failure'
+
+# An unknown command is a usage error.
+! exec mycli nope
+stderr 'unknown command'
