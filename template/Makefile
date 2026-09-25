@@ -14,6 +14,8 @@ LDFLAGS     := -s -w \
 COVER_FILE  := coverage.out
 COVER_MIN   := 85
 
+IMAGE       ?= mycli
+
 .PHONY: build
 build: ## build bin/$(BINARY) for the host
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) ./cmd/$(BINARY)
@@ -61,6 +63,14 @@ cross-%:
 	echo "building $$os/$$arch"; \
 	CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags '$(LDFLAGS)' \
 		-o bin/$(BINARY)-$$os-$$arch ./cmd/$(BINARY)
+
+.PHONY: docker
+docker: ## build the container image (scratch, non-root, static)
+	docker build \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		-t $(IMAGE):$(VERSION) -t $(IMAGE):latest .
 
 .PHONY: clean
 clean: ## remove build and coverage artifacts

@@ -37,6 +37,16 @@ mycli hello Kit --delay 30s         # Ctrl-C unwinds cleanly, exits 130
 | 4 | missing prerequisite |
 | 130 | canceled by SIGINT or SIGTERM |
 
+## Container
+
+```
+make docker                       # builds mycli:<version> and mycli:latest
+docker run --rm mycli:latest hello Kit
+```
+
+The image is `scratch` plus the static binary and a CA bundle: no shell, no
+package manager, nothing to patch. It runs as UID 65532, not root.
+
 ## Develop
 
 ```
@@ -47,6 +57,7 @@ make cover     # tests with the CI coverage gate (85%)
 make verify    # vet + lint + test (pre-push gate)
 make lint      # golangci-lint
 make cross     # build every release target
+make docker    # build the container image
 make help      # list all targets
 ```
 

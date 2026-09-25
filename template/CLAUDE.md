@@ -140,10 +140,17 @@ NEVER    the boundary the command does not cross
 ```
 make build     # bin/mycli for the host
 make cross     # linux/amd64, linux/arm64, darwin/arm64, static
+make docker    # container image: scratch, static, non-root
 ```
 
 Version, commit, and build date are injected at link time. Do not read them
-from a file at runtime.
+from a file at runtime. The Dockerfile takes the same three values as build
+args, so an image reports the same metadata a host build does.
+
+The runtime stage is `scratch`: the binary, a CA bundle, and nothing else. Do
+not add a shell or a package manager to debug a container. Reproduce the
+problem with the host binary instead. If the image ever needs a writable path,
+mount it; do not build one in.
 
 ## Conventions
 

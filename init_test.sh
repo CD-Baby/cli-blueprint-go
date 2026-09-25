@@ -103,6 +103,24 @@ set -e
 [ "$code" -eq 130 ] || fail "SIGINT should exit 130, got $code"
 pass "SIGINT unwinds and exits 130"
 
+printf '\n== checking the Dockerfile was reseeded\n'
+grep -q 'internal/cli.Version' Dockerfile || fail "Dockerfile lost its ldflags"
+grep -q 'github.com/acme/ledgerctl/internal/cli' Dockerfile \
+  || fail "Dockerfile ldflags still point at the seed module"
+grep -q '/out/ledgerctl' Dockerfile || fail "Dockerfile binary path was not reseeded"
+pass "Dockerfile targets the scaffolded module and binary"
+
+if docker info >/dev/null 2>&1; then
+  printf '\n== building the container image\n'
+  docker build -q -t ledgerctl:selftest . >/dev/null || fail "docker build"
+  out="$(docker run --rm ledgerctl:selftest hello Kit)"
+  [ "$out" = "Hello, Kit!" ] || fail "container printed '$out'"
+  docker image rm -f ledgerctl:selftest >/dev/null 2>&1 || true
+  pass "container image builds and runs"
+else
+  printf '\n-- docker daemon not available, skipping image build\n'
+fi
+
 if command -v golangci-lint >/dev/null 2>&1; then
   printf '\n== linting\n'
   golangci-lint run || fail "golangci-lint"

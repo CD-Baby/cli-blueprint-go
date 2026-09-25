@@ -40,7 +40,8 @@ Options:
 | `internal/cli/hello.go` | worked example command; copy it, then delete it |
 | `internal/greeting/` | worked example domain package; the logic lives here, not in `cli` |
 | `internal/result/` | the `--json` output envelope |
-| `Makefile` | build, test, race, cover gate, verify, lint, cross |
+| `Makefile` | build, test, race, cover gate, verify, lint, cross, docker |
+| `Dockerfile` | multi-stage build to a scratch, non-root, static image |
 | `.golangci.yml` | golangci-lint v2 config |
 | `.github/workflows/ci.yml` | vet, lint, race tests, coverage gate, cross-compile |
 | `CLAUDE.md` | the working contract, ready for an agent to read |

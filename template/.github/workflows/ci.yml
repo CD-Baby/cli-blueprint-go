@@ -25,3 +25,5 @@ jobs:
         run: make cover
       - name: cross-compile
         run: make cross
+      - name: docker build
+        run: docker build -t mycli:ci .
