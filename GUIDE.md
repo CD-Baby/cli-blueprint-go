@@ -79,11 +79,37 @@ package under `internal/`. This is not architecture for its own sake: it is
 what lets you test the work without a `*cobra.Command`, and what keeps
 `root.go` readable at command twenty.
 
-## 6. Two test layers, both required
+The blueprint ships the split rather than only describing it.
+`internal/greeting` validates the name and builds the text. It returns
+`ErrNoName` and `*ErrNameTooLong`, its own values, and knows nothing about
+exit codes. `hello.go` calls it and translates:
+
+```go
+func helloFailure(err error) error {
+	var tooLong *greeting.ErrNameTooLong
+	switch {
+	case errors.Is(err, greeting.ErrNoName):
+		return prereqError("no name given: ...", nil)
+	case errors.As(err, &tooLong):
+		return validationError(tooLong.Error(),
+			map[string]int{"length": tooLong.Len, "limit": tooLong.Limit})
+	default:
+		return internalError(err.Error(), nil)
+	}
+}
+```
+
+The domain decides what is wrong. The command decides what that costs the
+caller. Keep that seam and both halves stay testable on their own.
+
+## 6. Three test layers, all required
 
 - **Table tests** next to the code. Fast, precise, they cover branches.
 - **`.txtar` scripts** under `internal/cli/testdata/script/`. They run the
   real binary and assert on exit codes, stdout, stderr and both output modes.
+- **Golden files** under `internal/cli/testdata/golden/`. Help text is a
+  published contract, so it is pinned. `make update-golden` rewrites the
+  files; the diff is the point, so read it before committing.
 
 A `.txtar` file is a script plus its fixture files in one text file:
 
@@ -127,9 +153,13 @@ when you need it, and keep it in its own package under `internal/`.
 
 ## Adding your first command
 
-1. `cp internal/cli/hello.go internal/cli/thing.go`
-2. Rename `newHelloCmd` to `newThingCmd` and rewrite the handler.
-3. Register it in `newRootCmdWith`.
-4. Write the table tests and a `.txtar` script.
-5. Delete `hello.go`, `hello_test.go` and `testdata/script/hello.txtar`.
-6. `make verify`
+1. `cp -r internal/greeting internal/thing` and rewrite it. This is where
+   the logic goes. It must test without cobra.
+2. `cp internal/cli/hello.go internal/cli/thing.go`
+3. Rename `newHelloCmd` to `newThingCmd`, call `thing`, and rewrite
+   `helloFailure` into `thingFailure`.
+4. Register it in `newRootCmdWith`.
+5. Write the table tests for both packages and a `.txtar` script.
+6. Delete `hello.go`, `hello_test.go`, `internal/greeting/`,
+   `testdata/script/hello.txtar` and `testdata/golden/hello-help.txt`.
+7. `make update-golden`, read the diff, then `make verify`

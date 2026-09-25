@@ -34,8 +34,8 @@ cover: ## run tests and enforce the coverage gate (library code only)
 	awk "BEGIN{exit !($$total >= $(COVER_MIN))}" || { echo "coverage below gate"; exit 1; }
 
 .PHONY: update-golden
-update-golden: ## regenerate golden files (-update)
-	$(GO) test ./... -update
+update-golden: ## rewrite the golden files from current output
+	UPDATE_GOLDEN=1 $(GO) test ./... -count=1
 
 .PHONY: vet
 vet: ## go vet

@@ -33,14 +33,20 @@ internal/cli/          command tree, global flags, exit codes, output contract
   root.go              persistent flags, exit code table, Execute
   errors.go            cliError constructors, one per exit code
   run.go               the RunE wrapper every command uses
+  logging.go           the stderr logger and its level parsing
   version.go           build metadata injected by -ldflags
   hello.go             worked example; copy it, then delete it
   testdata/script/     testscript .txtar end-to-end scripts
+  testdata/golden/     golden files for help text
+internal/greeting/     worked example of a domain package; delete it with hello
 internal/result/       the --json output envelope
 ```
 
-Add a domain package under `internal/` for each real operation. Keep files
-focused. A file that grows past a few hundred lines is doing too much.
+Add a domain package under `internal/` for each real operation. `internal/cli`
+must stay free of logic: it parses flags, calls a domain package, and maps the
+domain's errors onto the exit code contract. `internal/greeting` and
+`hello.go` are that split in miniature. Keep files focused. A file that grows
+past a few hundred lines is doing too much.
 
 ## Output Contract (get this exactly right)
 
@@ -81,12 +87,16 @@ Add a code only when no existing code fits. Document the new code in
 
 ## Adding a Command
 
-1. Copy `hello.go` to `<command>.go`.
-2. Wrap the handler in `run(g, "<command>", ...)`.
-3. Return a `*cmdResult`. Never write to stdout from the handler.
-4. Return a typed error from `errors.go` for every expected failure.
-5. Register the command in `newRootCmdWith`.
-6. Write table tests next to the file, and a `.txtar` script for the
+1. Put the work in a package under `internal/`. It must compile and test
+   without cobra, and must return its own error values, not CLI errors.
+2. Copy `hello.go` to `<command>.go`.
+3. Wrap the handler in `run(g, "<command>", ...)`.
+4. Call the domain package. Keep the handler free of logic.
+5. Map the domain's errors onto the exit code contract, as `helloFailure`
+   does. `errors.Is` for sentinels, `errors.As` for typed errors.
+6. Return a `*cmdResult`. Never write to stdout from the handler.
+7. Register the command in `newRootCmdWith`.
+8. Write table tests beside both files, and a `.txtar` script for the
    end-to-end behavior.
 
 ## Help Text Requirements
@@ -104,6 +114,9 @@ NEVER    the boundary the command does not cross
 - Table tests live next to the code they cover.
 - `.txtar` scripts under `internal/cli/testdata/script/` cover command
   behavior end to end: exit codes, both output modes, and stderr.
+- Golden files under `internal/cli/testdata/golden/` pin the help text, so a
+  change to a published contract shows up in review. Regenerate with
+  `make update-golden`, and read the diff before you commit it.
 - `make cover` enforces 85% statement coverage over `./internal/...`.
 - `make verify` (vet + lint + test) is the pre-push gate.
 
@@ -123,3 +136,10 @@ from a file at runtime.
 - Wrap errors with context: `fmt.Errorf("read %s: %w", path, err)`.
 - No `panic` outside `main`. No `os.Exit` outside `main`.
 - Do not log to stdout. Ever. Use `g.log()`, which writes to stderr.
+
+## License
+
+`LICENSE` is proprietary: copyright Virgin Music, all rights reserved, with a
+grant to Virgin Music and CD Baby staff for company work. Keep the file in
+every project scaffolded from the blueprint, and do not publish this code
+outside the company without approval.

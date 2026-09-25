@@ -3,6 +3,8 @@ package cli
 import (
 	"strings"
 	"testing"
+
+	"github.com/example/mycli/internal/greeting"
 )
 
 func TestHelloPlainOutput(t *testing.T) {
@@ -70,7 +72,7 @@ func TestHelloWithoutNameIsPrereqFailure(t *testing.T) {
 }
 
 func TestHelloOverlongNameIsValidationFailure(t *testing.T) {
-	long := strings.Repeat("a", maxNameLen+1)
+	long := strings.Repeat("a", greeting.MaxNameLen+1)
 	out, code := runRoot(t, "hello", long, "--json")
 	if code != ExitValidation {
 		t.Fatalf("want exit %d, got %d (%s)", ExitValidation, code, out)

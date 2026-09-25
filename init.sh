@@ -145,6 +145,12 @@ done: $target
 Next:
   cd $target
   \$EDITOR CLAUDE.md README.md        # replace the placeholder descriptions
-  \$EDITOR internal/cli/hello.go      # copy it into your first real command, then delete it
+  \$EDITOR internal/cli/hello.go      # the worked example command
+  \$EDITOR internal/greeting/          # the worked example domain package
   make verify
+
+Replace both examples with your own command and domain package, then delete
+internal/greeting, hello.go, hello_test.go, testdata/script/hello.txtar and
+testdata/golden/hello-help.txt. Run 'make update-golden' after any help-text
+change, and read the diff.
 EOF

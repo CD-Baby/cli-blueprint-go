@@ -1,25 +1,22 @@
 package cli
 
 import (
-	"fmt"
+	"errors"
 	"os"
-	"strings"
 
+	"github.com/example/mycli/internal/greeting"
 	"github.com/spf13/cobra"
 )
 
-// maxNameLen bounds the greeting input so the command has a real validation
-// failure to demonstrate.
-const maxNameLen = 64
-
 // newHelloCmd is the worked example of the command pattern. Copy it when you
-// add a command, then delete it. It shows all five pieces:
+// add a command, then delete it. It shows all six pieces:
 //
 //  1. run(g, "<name>", ...) wraps the handler in the shared output contract
-//  2. the handler returns a *cmdResult, never writes to stdout itself
-//  3. failures return a typed *cliError, which fixes the exit code
-//  4. cmdResult.data feeds --json; cmdResult.plain feeds human stdout
-//  5. warnings ride along in the envelope without failing the command
+//  2. the handler holds no logic: internal/greeting does the work
+//  3. the handler returns a *cmdResult, and never writes to stdout itself
+//  4. domain errors are mapped onto the exit code contract here, not there
+//  5. cmdResult.data feeds --json; cmdResult.plain feeds human stdout
+//  6. warnings ride along in the envelope without failing the command
 func newHelloCmd(g *globalFlags) *cobra.Command {
 	var shout bool
 
@@ -36,22 +33,15 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 			if len(args) == 1 {
 				name = args[0]
 			}
-			if name == "" {
-				return nil, prereqError(
-					"no name given: pass one as an argument or set MYCLI_NAME", nil)
-			}
-			if len(name) > maxNameLen {
-				return nil, validationError(
-					fmt.Sprintf("name is %d bytes; the limit is %d", len(name), maxNameLen),
-					map[string]int{"length": len(name), "limit": maxNameLen})
-			}
-
 			g.log().Debug("resolved name", "name", name, "from_env", len(args) == 0)
 
-			greeting := "Hello, " + name + "!"
+			text, err := greeting.Compose(name, greeting.Options{Shout: shout})
+			if err != nil {
+				return nil, helloFailure(err)
+			}
+
 			var warnings []string
 			if shout {
-				greeting = strings.ToUpper(greeting)
 				warnings = append(warnings, "shout mode upper-cased the greeting")
 			}
 			if g.dryRun {
@@ -60,8 +50,8 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 			}
 
 			return &cmdResult{
-				data:     map[string]string{"name": name, "greeting": greeting},
-				plain:    greeting + "\n",
+				data:     map[string]string{"name": name, "greeting": text},
+				plain:    text + "\n",
 				warnings: warnings,
 			}, nil
 		}),
@@ -69,4 +59,21 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 
 	cmd.Flags().BoolVar(&shout, "shout", false, "upper-case the greeting")
 	return cmd
+}
+
+// helloFailure translates a greeting error into the exit code contract. This
+// mapping belongs to the command layer: the domain package decides what is
+// wrong, and the command decides what that costs the caller.
+func helloFailure(err error) error {
+	var tooLong *greeting.ErrNameTooLong
+	switch {
+	case errors.Is(err, greeting.ErrNoName):
+		return prereqError(
+			"no name given: pass one as an argument or set MYCLI_NAME", nil)
+	case errors.As(err, &tooLong):
+		return validationError(tooLong.Error(),
+			map[string]int{"length": tooLong.Len, "limit": tooLong.Limit})
+	default:
+		return internalError(err.Error(), nil)
+	}
 }

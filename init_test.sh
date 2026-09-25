@@ -44,6 +44,17 @@ pass "go.mod declares $MODULE"
 grep -q 'LEDGERCTL_LOG' internal/cli/root.go || fail "env prefix was not applied"
 pass "env prefix is LEDGERCTL_"
 
+[ -f LICENSE ] || fail "LICENSE was not carried over"
+grep -q 'Virgin Music' LICENSE || fail "LICENSE lost its copyright holder"
+pass "LICENSE is present"
+
+[ -d internal/greeting ] || fail "the domain package was not carried over"
+pass "internal/greeting is present"
+
+grep -q 'ledgerctl \[command\]' internal/cli/testdata/golden/root-help.txt \
+  || fail "golden help text was not reseeded"
+pass "golden files were reseeded"
+
 printf '\n== building and testing the scaffolded project\n'
 go vet ./... || fail "go vet"
 pass "go vet"

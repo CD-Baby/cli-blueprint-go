@@ -59,3 +59,7 @@ Run a single script:
 ```
 go test ./internal/cli -run 'TestScripts/hello'
 ```
+
+## License
+
+Copyright Virgin Music. All rights reserved. See [`LICENSE`](LICENSE).

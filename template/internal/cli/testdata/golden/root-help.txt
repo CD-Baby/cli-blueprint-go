@@ -1,0 +1,26 @@
+Longer description.
+
+EXIT CODES
+  0  success
+  1  internal error (bug or I/O failure)
+  2  usage error (unknown command/flag, bad argument)
+  3  validation failure (input failed schema or semantic checks)
+  4  missing prerequisite
+
+Usage:
+  mycli [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  hello       Greet someone
+  help        Help about any command
+  version     Print version, commit, build date, and runtime
+
+Flags:
+      --dry-run            where supported: full validation, no writes
+  -h, --help               help for mycli
+      --json               emit a machine-readable result envelope on stdout
+      --log-level string   stderr log verbosity: debug, info, warn, error (default "info")
+      --quiet              equivalent to --log-level error
+
+Use "mycli [command] --help" for more information about a command.

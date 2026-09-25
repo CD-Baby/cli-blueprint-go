@@ -1,0 +1,18 @@
+Greet someone by name.
+
+READS    the name argument, else $MYCLI_NAME
+WRITES   nothing
+NEVER    makes a network call
+
+Usage:
+  mycli hello [name] [flags]
+
+Flags:
+  -h, --help    help for hello
+      --shout   upper-case the greeting
+
+Global Flags:
+      --dry-run            where supported: full validation, no writes
+      --json               emit a machine-readable result envelope on stdout
+      --log-level string   stderr log verbosity: debug, info, warn, error (default "info")
+      --quiet              equivalent to --log-level error
