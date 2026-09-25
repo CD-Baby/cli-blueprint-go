@@ -5,18 +5,18 @@
 #   ./init.sh <target-dir> --module <module-path> [--binary <name>] [options]
 #
 # Example:
-#   ./init.sh ~/Code/ledgerctl --module github.com/kpearson/ledgerctl
+#   ./init.sh ~/Code/ledgerctl --module github.com/acme/ledgerctl
 #
 # The template is a real, compiling, tested Go module. This script copies it and
 # replaces three seed strings:
 #
-#   github.com/kpearson/mycli  ->  --module
+#   github.com/example/mycli  ->  --module
 #   mycli                      ->  --binary (default: basename of --module)
 #   MYCLI_                     ->  --env-prefix (default: binary, upper-cased)
 
 set -euo pipefail
 
-readonly SEED_MODULE="github.com/kpearson/mycli"
+readonly SEED_MODULE="github.com/example/mycli"
 readonly SEED_BINARY="mycli"
 readonly SEED_PREFIX="MYCLI_"
 

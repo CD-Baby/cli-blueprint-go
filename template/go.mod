@@ -1,4 +1,4 @@
-module github.com/kpearson/mycli
+module github.com/example/mycli
 
 go 1.26
 

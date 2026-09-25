@@ -120,10 +120,10 @@ overwritten. Add a row; do not add a second mechanism.
 
 ## What was deliberately left out
 
-`org-pulse-cli` also has workspace discovery, a TOML config and secrets layer,
-JSON Schema validation, and a ledger. They are real and they work — but they
-are that project's domain, not every CLI's. Copy them from `org-pulse-cli`
-when a project needs them.
+A workspace root and its discovery rules, a TOML config and secrets layer,
+JSON Schema validation, and a persistent ledger. Each is worth having in the
+project that needs it, and none belongs in every CLI. Add the one you need
+when you need it, and keep it in its own package under `internal/`.
 
 ## Adding your first command
 

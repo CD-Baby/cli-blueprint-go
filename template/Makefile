@@ -1,5 +1,5 @@
 BINARY      := mycli
-MODULE      := github.com/kpearson/mycli
+MODULE      := github.com/example/mycli
 CLI_PKG     := $(MODULE)/internal/cli
 GO          ?= go
 

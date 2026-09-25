@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/kpearson/mycli/internal/result"
+	"github.com/example/mycli/internal/result"
 	"github.com/spf13/cobra"
 )
 

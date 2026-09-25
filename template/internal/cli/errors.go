@@ -1,6 +1,6 @@
 package cli
 
-import "github.com/kpearson/mycli/internal/result"
+import "github.com/example/mycli/internal/result"
 
 // cliError carries both the process exit code a command should terminate with
 // and the envelope payload printed under --json. RunE handlers return these;

@@ -1,12 +1,10 @@
 # cli-blueprint-go
 
-**A production-ready Go CLI skeleton, extracted from `org-pulse-cli`.**
+**A production-ready Go CLI skeleton.**
 
 One command scaffolds a new project that already builds, tests, lints and
 cross-compiles. You write the first real command, not the eighth copy of the
 same wiring.
-
-Companion to [`cli-blueprint-python`](../cli-blueprint-python).
 
 ---
 
@@ -14,7 +12,7 @@ Companion to [`cli-blueprint-python`](../cli-blueprint-python).
 
 ```
 git clone <this repo> ~/Code/cli-blueprint-go
-~/Code/cli-blueprint-go/init.sh ~/Code/ledgerctl --module github.com/kpearson/ledgerctl
+~/Code/cli-blueprint-go/init.sh ~/Code/ledgerctl --module github.com/acme/ledgerctl
 ```
 
 That produces a project that passes `make verify` before you write a line.
@@ -52,14 +50,14 @@ Read [`GUIDE.md`](GUIDE.md) for the contract the skeleton enforces and why.
 ## The template is real code
 
 `template/` is not a directory of `{{PLACEHOLDER}}` tokens. It is a compiling,
-tested Go module named `github.com/kpearson/mycli`. CI builds it, tests it and
+tested Go module named `github.com/example/mycli`. CI builds it, tests it and
 lints it on every push, so the skeleton cannot rot.
 
 `init.sh` replaces three seed strings:
 
 | Seed | Replaced with |
 | ---- | ------------- |
-| `github.com/kpearson/mycli` | `--module` |
+| `github.com/example/mycli` | `--module` |
 | `mycli` | `--binary` |
 | `MYCLI_` | `--env-prefix` |
 

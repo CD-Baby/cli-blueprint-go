@@ -9,7 +9,7 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 TARGET="$WORK/ledgerctl"
-MODULE="github.com/example/ledgerctl"
+MODULE="github.com/acme/ledgerctl"
 
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 pass() { printf 'ok   %s\n' "$*"; }

@@ -5,7 +5,7 @@ package main
 import (
 	"os"
 
-	"github.com/kpearson/mycli/internal/cli"
+	"github.com/example/mycli/internal/cli"
 )
 
 func main() {
