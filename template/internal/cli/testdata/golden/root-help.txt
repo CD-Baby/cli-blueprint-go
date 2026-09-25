@@ -1,11 +1,12 @@
 Longer description.
 
 EXIT CODES
-  0  success
-  1  internal error (bug or I/O failure)
-  2  usage error (unknown command/flag, bad argument)
-  3  validation failure (input failed schema or semantic checks)
-  4  missing prerequisite
+    0  success
+    1  internal error (bug or I/O failure)
+    2  usage error (unknown command/flag, bad argument)
+    3  validation failure (input failed schema or semantic checks)
+    4  missing prerequisite
+  130  canceled by SIGINT or SIGTERM
 
 Usage:
   mycli [command]

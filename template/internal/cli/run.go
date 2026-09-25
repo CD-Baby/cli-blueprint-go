@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 
 	"github.com/example/mycli/internal/result"
@@ -30,7 +31,13 @@ func run(g *globalFlags, command string,
 		if err != nil {
 			var ce *cliError
 			if !errors.As(err, &ce) {
-				ce = internalError(err.Error(), nil)
+				// A cancelled context is a signal, not a bug. Handlers return
+				// ctx.Err() and this turns it into the documented exit code.
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+					ce = canceledError()
+				} else {
+					ce = internalError(err.Error(), nil)
+				}
 			}
 			if g.json {
 				_ = result.Failure(command, ce.Result()).Write(out)

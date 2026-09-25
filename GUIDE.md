@@ -57,6 +57,31 @@ with the logs they asked for silently dropped.
 Log at `debug` for anything the caller did not ask to see. A command run at the
 default level should print its result and nothing else.
 
+## 3b. A signal cancels; it does not kill
+
+`Execute` wraps the run in `signal.NotifyContext` for SIGINT and SIGTERM, and
+hands the context to cobra with `ExecuteContext`. Ctrl-C then cancels the
+context instead of killing the process, so an in-flight write finishes or
+unwinds and deferred cleanup runs.
+
+Only the first signal is caught. A second one reaches the default handler and
+terminates immediately, which is deliberate: a command that mishandles
+cancellation must never become unkillable.
+
+The obligation this puts on you is one line per blocking call:
+
+```go
+req, err := http.NewRequestWithContext(cmd.Context(), "GET", url, nil)
+rows, err := db.QueryContext(cmd.Context(), q)
+cmd := exec.CommandContext(cmd.Context(), "git", "status")
+```
+
+When the wait loses, return `ctx.Err()`. Nothing else. `run` recognizes
+`context.Canceled` and `context.DeadlineExceeded` and maps both to exit 130,
+the shell convention of 128 plus the signal number. `hello --delay` shows the
+whole path, and `init_test.sh` sends a real SIGINT to a real binary and
+asserts on the exit code.
+
 ## 4. Failures are typed
 
 `errors.go` holds one constructor per exit code. A handler returns one of
@@ -71,6 +96,7 @@ Pick the code by asking who is at fault:
 | `validationError` | 3 | the input is well-formed but wrong |
 | `prereqError` | 4 | something must exist first |
 | `internalError` | 1 | we are at fault |
+| `canceledError` | 130 | a signal stopped us; `run` produces it, not you |
 
 ## 5. The command tree holds no logic
 

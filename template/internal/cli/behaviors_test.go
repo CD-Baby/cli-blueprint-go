@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -13,12 +14,19 @@ import (
 // returns the combined stdout/stderr plus the process exit code.
 func runRoot(t *testing.T, args ...string) (string, int) {
 	t.Helper()
+	return runRootCtx(context.Background(), t, args...)
+}
+
+// runRootCtx is runRoot with a caller-supplied context, for cancellation tests.
+// ctx leads because revive enforces context-as-argument; the testing.T follows.
+func runRootCtx(ctx context.Context, t *testing.T, args ...string) (string, int) {
+	t.Helper()
 	root := newRootCmd()
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
 	root.SetArgs(args)
-	code := execute(root)
+	code := execute(ctx, root)
 	return out.String(), code
 }
 
@@ -126,7 +134,7 @@ func TestQuietImpliesErrorLogLevel(t *testing.T) {
 	root.SetArgs([]string{"hello", "world", "--quiet"})
 	var out bytes.Buffer
 	root.SetOut(&out)
-	if err := root.Execute(); err != nil {
+	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if g.logLevel != "error" {
@@ -141,7 +149,7 @@ func TestEnvSuppliesFlagDefault(t *testing.T) {
 	root.SetArgs([]string{"hello", "world"})
 	var out bytes.Buffer
 	root.SetOut(&out)
-	if err := root.Execute(); err != nil {
+	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if g.logLevel != "debug" {
@@ -156,7 +164,7 @@ func TestExplicitFlagBeatsEnv(t *testing.T) {
 	root.SetArgs([]string{"hello", "world", "--log-level", "warn"})
 	var out bytes.Buffer
 	root.SetOut(&out)
-	if err := root.Execute(); err != nil {
+	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if g.logLevel != "warn" {

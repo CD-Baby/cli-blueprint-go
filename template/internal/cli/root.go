@@ -3,8 +3,12 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -20,6 +24,10 @@ const (
 	ExitUsage      = 2 // unknown command/flag, bad argument
 	ExitValidation = 3 // input failed schema or semantic checks
 	ExitPrereq     = 4 // missing prerequisite (no input, unknown target, ...)
+
+	// ExitCanceled reports that a signal stopped the command. It follows the
+	// shell convention of 128 + the signal number, and 2 is SIGINT.
+	ExitCanceled = 130
 )
 
 // CodedError is an error that carries the process exit code a command should
@@ -43,15 +51,22 @@ type globalFlags struct {
 }
 
 // Execute builds and runs the root command, returning the process exit code.
+//
+// SIGINT and SIGTERM cancel the command's context instead of killing the
+// process, so in-flight work unwinds and deferred cleanup runs. A second
+// signal is left to the default handler, which terminates immediately: a
+// command that ignores the first signal must not become unkillable.
 func Execute() int {
-	return execute(newRootCmd())
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return execute(ctx, newRootCmd())
 }
 
 // execute runs an already-built command tree and maps its error to an exit
-// code. Kept separate from Execute so tests can drive a root with its args and
-// output streams redirected.
-func execute(root *cobra.Command) int {
-	err := root.Execute()
+// code. Kept separate from Execute so tests can drive a root with its args,
+// output streams and context under their own control.
+func execute(ctx context.Context, root *cobra.Command) int {
+	err := root.ExecuteContext(ctx)
 	if err == nil {
 		return ExitOK
 	}
@@ -75,11 +90,12 @@ func newRootCmdWith(g *globalFlags) *cobra.Command {
 		Short: "One-line description of what this CLI does",
 		Long: "Longer description.\n\n" +
 			"EXIT CODES\n" +
-			"  0  success\n" +
-			"  1  internal error (bug or I/O failure)\n" +
-			"  2  usage error (unknown command/flag, bad argument)\n" +
-			"  3  validation failure (input failed schema or semantic checks)\n" +
-			"  4  missing prerequisite",
+			"    0  success\n" +
+			"    1  internal error (bug or I/O failure)\n" +
+			"    2  usage error (unknown command/flag, bad argument)\n" +
+			"    3  validation failure (input failed schema or semantic checks)\n" +
+			"    4  missing prerequisite\n" +
+			"  130  canceled by SIGINT or SIGTERM",
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {

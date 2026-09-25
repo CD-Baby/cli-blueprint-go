@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"log/slog"
 	"strings"
 	"testing"
@@ -70,7 +71,7 @@ func TestLogsGoToStderrNeverStdout(t *testing.T) {
 	root.SetOut(&out)
 	root.SetErr(&errBuf)
 	root.SetArgs([]string{"hello", "Kit", "--log-level", "debug"})
-	if code := execute(root); code != ExitOK {
+	if code := execute(context.Background(), root); code != ExitOK {
 		t.Fatalf("want exit 0, got %d", code)
 	}
 	if strings.Contains(out.String(), "resolved name") {
@@ -90,7 +91,7 @@ func TestDefaultLevelHidesDebugRecords(t *testing.T) {
 	root.SetOut(&out)
 	root.SetErr(&errBuf)
 	root.SetArgs([]string{"hello", "Kit"})
-	if code := execute(root); code != ExitOK {
+	if code := execute(context.Background(), root); code != ExitOK {
 		t.Fatalf("want exit 0, got %d", code)
 	}
 	if strings.Contains(errBuf.String(), "resolved name") {
@@ -104,7 +105,7 @@ func TestQuietSuppressesWarnRecords(t *testing.T) {
 	root.SetOut(&out)
 	root.SetErr(&errBuf)
 	root.SetArgs([]string{"hello", "Kit", "--dry-run", "--quiet"})
-	if code := execute(root); code != ExitOK {
+	if code := execute(context.Background(), root); code != ExitOK {
 		t.Fatalf("want exit 0, got %d", code)
 	}
 	if strings.Contains(errBuf.String(), "dry run") {

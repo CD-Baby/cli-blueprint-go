@@ -23,6 +23,7 @@ mycli --help
 
 mycli hello Kit --log-level debug   # diagnostics on stderr; stdout stays clean
 mycli hello Kit --quiet             # errors only
+mycli hello Kit --delay 30s         # Ctrl-C unwinds cleanly, exits 130
 ```
 
 ## Exit codes
@@ -34,6 +35,7 @@ mycli hello Kit --quiet             # errors only
 | 2 | usage error |
 | 3 | validation failure |
 | 4 | missing prerequisite |
+| 130 | canceled by SIGINT or SIGTERM |
 
 ## Develop
 

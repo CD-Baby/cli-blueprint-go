@@ -91,6 +91,18 @@ set -e
 [ "$code" -eq 2 ] || fail "unknown command should exit 2, got $code"
 pass "exit code contract holds (2 on unknown command)"
 
+printf '\n== checking SIGINT cancels instead of killing\n'
+./bin/ledgerctl hello Kit --delay 30s >/dev/null 2>&1 &
+pid=$!
+sleep 1
+kill -INT "$pid" 2>/dev/null || true
+set +e
+wait "$pid"
+code=$?
+set -e
+[ "$code" -eq 130 ] || fail "SIGINT should exit 130, got $code"
+pass "SIGINT unwinds and exits 130"
+
 if command -v golangci-lint >/dev/null 2>&1; then
   printf '\n== linting\n'
   golangci-lint run || fail "golangci-lint"

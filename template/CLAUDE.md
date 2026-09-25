@@ -61,6 +61,20 @@ past a few hundred lines is doing too much.
 - Error `code` values are a public contract. Callers branch on them. Do not
   change what an existing code means.
 
+## Signals and Cancellation
+
+- `Execute` installs `signal.NotifyContext` for SIGINT and SIGTERM. A signal
+  cancels the command's context; it does not kill the process, so deferred
+  cleanup runs. A second signal hits the default handler and terminates at
+  once, so a command that ignores the first can never become unkillable.
+- Pass `cmd.Context()` into everything that blocks:
+  `http.NewRequestWithContext`, `db.QueryContext`, `exec.CommandContext`, and
+  any `select` that waits. A handler that blocks without the context is a bug.
+- Return `ctx.Err()` when the wait loses. `run` maps `context.Canceled` and
+  `context.DeadlineExceeded` onto exit 130, so handlers never build that error
+  themselves.
+- `hello --delay` is the worked example.
+
 ## Logging
 
 - Logs go to stderr through `g.log()`. Never to stdout, under any flag.
@@ -81,6 +95,7 @@ past a few hundred lines is doing too much.
 | 2 | usage error (unknown command or flag, bad argument) |
 | 3 | validation failure (input failed schema or semantic checks) |
 | 4 | missing prerequisite |
+| 130 | canceled by SIGINT or SIGTERM (128 + signal number) |
 
 Add a code only when no existing code fits. Document the new code in
 `root.go`, in the root `Long` help text, and in this table.

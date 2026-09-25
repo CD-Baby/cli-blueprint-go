@@ -30,6 +30,12 @@ func prereqError(msg string, detail any) *cliError {
 	return newErr(ExitPrereq, "MISSING_PREREQUISITE", msg, detail)
 }
 
+// canceledError reports that a signal stopped the command. run() produces it
+// from a context error, so handlers only have to return ctx.Err().
+func canceledError() *cliError {
+	return newErr(ExitCanceled, "CANCELED", "canceled by signal", nil)
+}
+
 func internalError(msg string, detail any) *cliError {
 	return newErr(ExitInternal, "INTERNAL_ERROR", msg, detail)
 }

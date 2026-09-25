@@ -8,8 +8,9 @@ Usage:
   mycli hello [name] [flags]
 
 Flags:
-  -h, --help    help for hello
-      --shout   upper-case the greeting
+      --delay duration   wait this long first; demonstrates cancellation by signal
+  -h, --help             help for hello
+      --shout            upper-case the greeting
 
 Global Flags:
       --dry-run            where supported: full validation, no writes

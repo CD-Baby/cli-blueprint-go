@@ -3,13 +3,14 @@ package cli
 import (
 	"errors"
 	"os"
+	"time"
 
 	"github.com/example/mycli/internal/greeting"
 	"github.com/spf13/cobra"
 )
 
 // newHelloCmd is the worked example of the command pattern. Copy it when you
-// add a command, then delete it. It shows all six pieces:
+// add a command, then delete it. It shows all seven pieces:
 //
 //  1. run(g, "<name>", ...) wraps the handler in the shared output contract
 //  2. the handler holds no logic: internal/greeting does the work
@@ -17,8 +18,10 @@ import (
 //  4. domain errors are mapped onto the exit code contract here, not there
 //  5. cmdResult.data feeds --json; cmdResult.plain feeds human stdout
 //  6. warnings ride along in the envelope without failing the command
+//  7. blocking work selects on cmd.Context(), so a signal cancels it
 func newHelloCmd(g *globalFlags) *cobra.Command {
 	var shout bool
+	var delay time.Duration
 
 	cmd := &cobra.Command{
 		Use:   "hello [name]",
@@ -28,7 +31,20 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 			"WRITES   nothing\n" +
 			"NEVER    makes a network call",
 		Args: cobra.MaximumNArgs(1),
-		RunE: run(g, "hello", func(_ *cobra.Command, args []string) (*cmdResult, error) {
+		RunE: run(g, "hello", func(cmd *cobra.Command, args []string) (*cmdResult, error) {
+			// Every blocking operation takes the command's context, so SIGINT and
+			// SIGTERM unwind it instead of killing the process. Real work passes
+			// this ctx to http.NewRequestWithContext, db.QueryContext,
+			// exec.CommandContext, and anything else that waits.
+			if delay > 0 {
+				g.log().Debug("waiting before greeting", "delay", delay)
+				select {
+				case <-time.After(delay):
+				case <-cmd.Context().Done():
+					return nil, cmd.Context().Err()
+				}
+			}
+
 			name := os.Getenv("MYCLI_NAME")
 			if len(args) == 1 {
 				name = args[0]
@@ -58,6 +74,8 @@ func newHelloCmd(g *globalFlags) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&shout, "shout", false, "upper-case the greeting")
+	cmd.Flags().DurationVar(&delay, "delay", 0,
+		"wait this long first; demonstrates cancellation by signal")
 	return cmd
 }
 
