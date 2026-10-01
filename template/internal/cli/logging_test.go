@@ -70,8 +70,7 @@ func TestLogsGoToStderrNeverStdout(t *testing.T) {
 	var out, errBuf bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&errBuf)
-	root.SetArgs([]string{"hello", "Kit", "--log-level", "debug"})
-	if code := execute(context.Background(), root); code != ExitOK {
+	if code := execute(context.Background(), root, []string{"hello", "Kit", "--log-level", "debug"}); code != ExitOK {
 		t.Fatalf("want exit 0, got %d", code)
 	}
 	if strings.Contains(out.String(), "resolved name") {
@@ -90,8 +89,7 @@ func TestDefaultLevelHidesDebugRecords(t *testing.T) {
 	var out, errBuf bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&errBuf)
-	root.SetArgs([]string{"hello", "Kit"})
-	if code := execute(context.Background(), root); code != ExitOK {
+	if code := execute(context.Background(), root, []string{"hello", "Kit"}); code != ExitOK {
 		t.Fatalf("want exit 0, got %d", code)
 	}
 	if strings.Contains(errBuf.String(), "resolved name") {
@@ -104,8 +102,7 @@ func TestQuietSuppressesWarnRecords(t *testing.T) {
 	var out, errBuf bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&errBuf)
-	root.SetArgs([]string{"hello", "Kit", "--dry-run", "--quiet"})
-	if code := execute(context.Background(), root); code != ExitOK {
+	if code := execute(context.Background(), root, []string{"hello", "Kit", "--dry-run", "--quiet"}); code != ExitOK {
 		t.Fatalf("want exit 0, got %d", code)
 	}
 	if strings.Contains(errBuf.String(), "dry run") {

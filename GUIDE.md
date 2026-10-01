@@ -28,10 +28,19 @@ The envelope's `ok` and the exit code always agree. A caller that reads stdout
 never has to strip a log line first. This is why the skeleton forbids logging
 to stdout.
 
+The `--json` failure column covers every failure, including the ones cobra
+raises before any command runs: an unknown command or flag, the wrong number
+of arguments, a bad `--log-level`. Those never reach a handler, so `execute`
+writes their `USAGE_ERROR` envelope. It finds `--json` by scanning the raw
+arguments, because a parse failure can stop the flag parser before it reaches
+`--json`.
+
 ## 3. Every command goes through one wrapper
 
 `run(g, "<command>", handler)` is the only way a command produces output. The
-handler returns data; the wrapper decides the format. A command that writes to
+one exception is `execute`, which writes the envelope for a failure that
+happens before any command runs. The handler returns data; the wrapper decides
+the format. A command that writes to
 stdout itself breaks the contract, and the next command written by copying it
 breaks it again.
 

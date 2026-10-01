@@ -8,8 +8,11 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 
+	"github.com/example/mycli/internal/result"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -59,23 +62,65 @@ type globalFlags struct {
 func Execute() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return execute(ctx, newRootCmd())
+	return execute(ctx, newRootCmd(), os.Args[1:])
 }
 
-// execute runs an already-built command tree and maps its error to an exit
-// code. Kept separate from Execute so tests can drive a root with its args,
-// output streams and context under their own control.
-func execute(ctx context.Context, root *cobra.Command) int {
-	err := root.ExecuteContext(ctx)
+// execute runs an already-built command tree against args and maps its error
+// to an exit code. Kept separate from Execute so tests can drive a root with
+// their own args, output streams and context.
+//
+// It also closes the --json contract for failures that never reach run():
+// cobra's own errors (unknown command or flag, wrong argument count) and
+// errors from PersistentPreRunE. Each gets one USAGE_ERROR envelope here. A
+// failure that run() already wrote is not written a second time.
+func execute(ctx context.Context, root *cobra.Command, args []string) int {
+	root.SetArgs(args)
+	cmd, err := root.ExecuteContextC(ctx)
 	if err == nil {
 		return ExitOK
 	}
-	var ce CodedError
-	if errors.As(err, &ce) {
-		return ce.ExitCode()
+	var ce *cliError
+	if !errors.As(err, &ce) {
+		// Only cobra's parse and validation errors arrive untyped: every
+		// handler error passes through run(), which types it.
+		ce = usageError(err.Error(), nil)
 	}
-	// Flag and argument parse errors reach here; cobra has already reported them.
-	return ExitUsage
+	if !ce.reported && wantsJSON(args) {
+		_ = result.Failure(commandName(root, cmd), ce.Result()).Write(root.OutOrStdout())
+	}
+	return ce.ExitCode()
+}
+
+// wantsJSON reports whether args request --json. It reads the raw arguments
+// because a parse failure can stop pflag before it reaches --json, which
+// leaves the bound flag unset. As in pflag, the last occurrence wins, and
+// nothing after "--" counts. An unparseable value such as --json=yes still
+// signals that the caller wants JSON.
+func wantsJSON(args []string) bool {
+	want := false
+	for _, a := range args {
+		if a == "--" {
+			break
+		}
+		switch {
+		case a == "--json":
+			want = true
+		case strings.HasPrefix(a, "--json="):
+			v, err := strconv.ParseBool(strings.TrimPrefix(a, "--json="))
+			want = err != nil || v
+		}
+	}
+	return want
+}
+
+// commandName is the envelope's "command" value: the path below the root, such
+// as "hello". A failure at the root itself, such as an unknown command, uses
+// the binary name.
+func commandName(root, cmd *cobra.Command) string {
+	if cmd == nil || cmd == root {
+		return root.Name()
+	}
+	return strings.TrimPrefix(cmd.CommandPath(), root.Name()+" ")
 }
 
 func newRootCmd() *cobra.Command {

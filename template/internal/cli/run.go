@@ -41,6 +41,7 @@ func run(g *globalFlags, command string,
 			}
 			if g.json {
 				_ = result.Failure(command, ce.Result()).Write(out)
+				ce.reported = true
 			}
 			return ce
 		}

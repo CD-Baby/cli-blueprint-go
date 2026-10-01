@@ -25,8 +25,7 @@ func runRootCtx(ctx context.Context, t *testing.T, args ...string) (string, int)
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
-	root.SetArgs(args)
-	code := execute(ctx, root)
+	code := execute(ctx, root, args)
 	return out.String(), code
 }
 

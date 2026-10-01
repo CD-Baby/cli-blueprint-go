@@ -8,6 +8,10 @@ import "github.com/example/mycli/internal/result"
 type cliError struct {
 	code int
 	rerr *result.Error
+
+	// reported is true once run() has written this error's --json envelope,
+	// so execute does not write it a second time.
+	reported bool
 }
 
 func (e *cliError) Error() string         { return e.rerr.Message }

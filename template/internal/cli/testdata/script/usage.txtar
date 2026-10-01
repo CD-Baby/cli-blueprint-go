@@ -1,0 +1,32 @@
+# Usage failures honor --json like every other failure: exactly one envelope on
+# stdout, the diagnostic on stderr, exit 2.
+
+! exec mycli nope --json
+stdout '"ok":false'
+stdout '"code":"USAGE_ERROR"'
+stdout '"command":"mycli"'
+stderr 'unknown command'
+
+# pflag stops at the bad flag before it reaches --json.
+! exec mycli hello Kit --bogus --json
+stdout '"code":"USAGE_ERROR"'
+stdout '"command":"hello"'
+stderr 'unknown flag'
+
+! exec mycli hello a b --json
+stdout '"code":"USAGE_ERROR"'
+
+! exec mycli hello Kit --log-level loud --json
+stdout '"code":"USAGE_ERROR"'
+stderr 'unknown --log-level'
+
+! exec mycli version extra --json
+stdout '"command":"version"'
+
+# Without --json a usage failure keeps stdout empty.
+! exec mycli nope
+! stdout .
+stderr 'unknown command'
+
+! exec mycli nope --json=false
+! stdout .
