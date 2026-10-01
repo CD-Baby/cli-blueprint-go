@@ -35,6 +35,10 @@ writes their `USAGE_ERROR` envelope. It finds `--json` by scanning the raw
 arguments, because a parse failure can stop the flag parser before it reaches
 `--json`.
 
+Two outputs are exempt: `--help` and the `completion` command print text even
+under `--json`. Help describes a command rather than reporting a result, and a
+completion script has to be raw shell.
+
 ## 3. Every command goes through one wrapper
 
 `run(g, "<command>", handler)` is the only way a command produces output. The

@@ -54,6 +54,9 @@ past a few hundred lines is doing too much.
   them.
 - Under `--json`, stdout carries exactly one envelope, on one line, and nothing
   else. This holds on success and on failure.
+- Exception: `--help` and the `completion` command print text even under
+  `--json`. Help describes a command; it is not a command result. A completion
+  script must be raw shell for the shell to load it.
 - Without `--json`, a success prints the handler's plaintext. A failure prints
   nothing on stdout.
 - The envelope's `ok` field and the process exit code always agree.
